@@ -1,0 +1,147 @@
+---
+title: "How To Make World Map with ggplot2 in R"
+author: "chike"
+date: '2022-08-03'
+output:
+  html_document:
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+source: https://datavizpyr.com/how-to-make-world-map-with-ggplot2-in-r/
+
+How To Make World Map with ggplot2 in R?
+datavizpyr · May 15, 2020 ·
+
+In this post, we will learn how to make world map using ggplot2 in R. We will use geom_map() function to make map with ggplot2. And then we will see an example of overlaying data on the world map.
+
+To overlay, we will use volcano eruption data from TidyTuesday project to overlay the locations of volcano eruption on world map.
+
+First, we will make a simple world map geom_map() function and then go on to customize the world map colors before adding data on top of the world map.
+
+Table of Contents [hide]
+
+1 Load Package and Datasets needed to make World Map
+2 Simple World Map in R
+3 Customizing Colors in World Map with R
+4 Overlaying Data on World Map with R
+5 Remove x and y-axis text and labels
+6 Customize World Map by adding bubbles different sizes
+7 Related
+
+# Load Package and Datasets needed to make World Map
+Let us first load tidyverse package to make world map with R.
+
+```{r}
+library(tidyverse)
+
+```
+We will load the volcano eruption data from TidyTuesday github page.
+```{r}
+volcano <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/volcano.csv")
+
+```
+To make world map with the volcano data we only need a few variables from the volcano data, including location information and volcano type.
+```{r}
+volcano %>% 
+  select(primary_volcano_type, longitude, 
+         latitude, population_within_100_km) %>%
+  head()
+```
+We can get the world map coordinates using map_data() function available as a part of tidyverse suit of packages.
+```{r}
+world <- map_data("world")
+world %>% head()
+
+```
+# Simple World Map in R
+Now we have all the data to make world map. Let us start with a simple world map using geom_map() function with the world map longitude and lattitude information.
+
+We use ggplot() function and add geom_map() layer with world data and aesthetics specifying longitude and latitude.
+```{r}
+ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region)
+  ) 
+
+```
+We get a nice world map, with black color filling the land area of the world by default.
+
+# Customizing Colors in World Map with R
+We can customize the world map by changing the world map color and adding country lines visible. To change color we use color and fill argument inside aes() function. We also specify the thickness of country lines using size argument.
+```{r}
+ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "black", fill = "lightgray", size = 0.1
+  ) 
+
+```
+
+Now, we have customized the world map color and added country lines.
+# Overlaying Data on World Map with R
+Now that we know how to make a simple world map, let us overlay data points on the world map to make the map more useful.
+
+In this example, we overlay different types of volcano from the volcano data on the world map. To overlay data on the map, we use geom_point() function and provide volcano data inside with its separate aes() function. Our x and y-axis are longitude and latitude of volcano locations and we color it by volcano type.
+```{r}
+ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "white", fill = "lightgray", size = 0.1
+  ) +
+  geom_point(
+    data = volcano,
+    aes(longitude, latitude, color = primary_volcano_type),
+    alpha = 0.7
+  ) 
+
+```
+Now we have overlayed volcano locations on the world map with different color for different types of volcano. Since there are many types of volcano, we have removed the legends on the plot.
+
+# Remove x and y-axis text and labels
+Let us customize the world map with volcano locations. In the above example, we have x and y-axis text and labels. We can easily remove that by using ggplot theme with no axis, i.e. theme_void().
+```{r}
+ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "white", fill = "lightgray", size = 0.1
+  ) +
+  geom_point(
+    data = volcano,
+    aes(longitude, latitude, color = primary_volcano_type),
+    alpha = 0.7
+  ) +
+  theme_void() +
+  theme(legend.position = "none")
+
+```
+
+# Customize World Map by adding bubbles different sizes
+Let us customize the world map with volcano locations further, by adding size variable based on the number of people affected by volcano. We can add size argument with “population_within_100_km” to make bubbles on the world map. We have also added title using labs() function in ggplot2.
+
+```{r}
+ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "white", fill = "lightgray", size = 0.1
+  ) +
+  geom_point(
+    data = volcano,
+    aes(longitude, latitude, 
+        color = primary_volcano_type,
+        size=population_within_100_km),
+    alpha = 0.5
+  ) +
+  #labs(x = NULL, y = NULL, color = NULL)+
+  theme_void() +
+  theme(legend.position = "none")+
+  labs(title="Volcano Locations")
+
+```
